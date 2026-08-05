@@ -1,5 +1,16 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi import Body, HTTPException
+from pydantic import BaseModel
+class Task(BaseModel):
+    id: int
+    title: str
+    done: bool
+
+class TaskCreate(BaseModel):
+    title:str
+    done:bool
+
 app = FastAPI()
 
 tasks_db = [
@@ -7,6 +18,8 @@ tasks_db = [
     {"id": 2, "title": "Build read endpoints", "done": False},
     {"id": 3, "title": "Test uvcorn", "done": False}
 ]
+
+next_task_id = max(task["id"] for task in tasks_db) + 1
 
 # Endpoint template form docs
 @app.get("/hello")
@@ -24,8 +37,8 @@ async def check_health():
     return { "status": "ok" }
 
 #List all task
-@app.get("/task")
-async def get_task():
+@app.get("/tasks")
+async def get_all_task():
     if tasks_db :
         return tasks_db
     return JSONResponse(
@@ -33,7 +46,7 @@ async def get_task():
             content={"error": f"No task exist"}
             )
 # Get a specific task
-@app.get("/task/{id}")
+@app.get("/tasks/{id}")
 async def get_task(id:int):
     for task in tasks_db:
         if task["id"] == id:
@@ -42,3 +55,21 @@ async def get_task(id:int):
             status_code=404, 
             content={"error": f"Task {id} not found"}
             )
+# Add
+@app.post("/tasks", status_code=201)
+async def add_task(payload: TaskCreate):
+    global next_task_id
+    
+    title = payload.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Title is needed")
+    
+    new_task = {
+        "id": next_task_id,
+        "title": title,
+        "done": False
+    }
+    tasks_db.append(new_task)
+    next_task_id += 1
+    
+    return {"status": "Created", "task": new_task}
