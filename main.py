@@ -60,11 +60,21 @@ async def get_task(id:int):
             status_code=404, 
             content={"error": f"Task {id} not found"}
             )
+#search
+@app.get("/tasks/")
+async def search_task( title: Optional[str] = None, done: Optional[bool] = None):
+    result = tasks_db.copy()
+    if done is not None:
+        result = [t for t in result if t["done"] == done]
+    if title:
+        result = [t for t in result if title.lower() in t["title"].lower()]
+    return result
+
 # Add
 @app.post("/tasks", status_code=201)
 async def add_task(payload: TaskCreate):
     global next_task_id
-    
+
     title = payload.title.strip()
     if not title:
         raise HTTPException(status_code=400, detail="Title is needed")
@@ -79,11 +89,11 @@ async def add_task(payload: TaskCreate):
     
     return {"status": "Created", "task": new_task}
 
+#Update
 @app.put("/tasks/{id}")
 async def update_task(id: int, update: TaskUpdate):
     for task in tasks_db:
         if task["id"] == id:
-            
             if update.title is not None:
                 stripped = update.title.strip()
                 if not stripped:
@@ -100,5 +110,5 @@ async def delete_task(id: int):
     for task in tasks_db:
         if task["id"] == id:
             tasks_db.remove(task)
-            return  {f"Task {id} Deleted"}
+            return 
     raise HTTPException(status_code=404, detail=f"Task {id} not found")
