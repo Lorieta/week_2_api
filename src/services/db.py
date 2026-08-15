@@ -1,11 +1,13 @@
 import sqlite3
+DB_NAME = "task.db"
 
-try:
+def get_connection():
+    return sqlite3.connect(DB_NAME)
 
-        conn = sqlite3.connect("task.db")
-        cur = conn.cursor()
+def init_db(conn):
+    cur = conn.cursor()
 
-        cur.execute(
+    cur.execute(
             """
     CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,8 +16,6 @@ try:
     );
             """
         )
-except:
-        print("wa")
 
 
 def table_exist(name):
@@ -30,8 +30,10 @@ def table_exist(name):
     ).fetchone()
 
     return result is not None
+
 #Insert data to the current db
-def seeding():
+def seeding(conn):
+    cur = conn.cursor()
     result = cur.execute(
         """
         INSERT INTO tasks (title, done)
@@ -43,29 +45,18 @@ SELECT title, done FROM (
 WHERE (SELECT COUNT(*) FROM tasks) = 0;
 
         """
-
-
     )
     conn.commit()
-    print("Data Inserted in the table: ")
-    cur.execute("SELECT * FROM tasks")
-    for row in cur.fetchall():
-        print(row)
-    return row
-  
+
 #Delete Rows
-def delete():
+def delete(conn):
+    cur = conn.cursor()
     result = cur.execute(
         """
         DELETE FROM tasks
-        
         """
     )
 
     conn.commit()
     print("delete")
-
-seeding()
-
-print("DB Name:", table_exist("tasks"))
 

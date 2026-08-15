@@ -2,11 +2,12 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from typing import Optional
 
-from src.models import TaskCreate, TaskUpdate
-from src.services import task_service
+from models import TaskCreate, TaskUpdate
+from services import task_service
+from services.db import get_connection
 
 router = APIRouter()
-
+conn = get_connection()
 
 @router.get("/hello")
 async def read_root():
@@ -25,7 +26,7 @@ async def check_health():
 
 @router.get("/tasks")
 async def get_all_task():
-    tasks = task_service.get_all_tasks()
+    tasks = task_service.get_all_tasks(conn)
     if tasks:
         return tasks
     return JSONResponse(status_code=404, content={"error": "No task exist"})
@@ -33,7 +34,7 @@ async def get_all_task():
 
 @router.get("/tasks/{id}")
 async def get_task(id: int):
-    return task_service.get_task(id)
+    return task_service.get_task(id,conn)
 
 
 @router.get("/tasks/")

@@ -1,18 +1,25 @@
 from fastapi import HTTPException
 from typing import Optional
 
-from src.repositories import task_repo
+
+from services import db
+
+def get_all_tasks(conn) -> list[dict]:
+    curr = conn.cursor()
+    statement = """
+    SELECT * FROM tasks
+    """
+    result = curr.execute(statement).fetchall()
+    return result
 
 
-def get_all_tasks() -> list[dict]:
-    return task_repo.get_all()
-
-
-def get_task(task_id: int) -> dict:
-    task = task_repo.get_by_id(task_id)
-    if task is None:
+def get_task(task_id: int,conn):
+    curr = conn.cursor()
+    statement = "SELECT * FROM tasks WHERE id = ?"
+    result = curr.execute(statement,(task_id,)).fetchone()
+    if result is None:
         raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
-    return task
+    return result
 
 
 def search_tasks(title: Optional[str] = None, done: Optional[bool] = None) -> list[dict]:
