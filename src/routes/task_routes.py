@@ -57,9 +57,16 @@ async def add_task(payload: TaskCreate):
 
 @router.put("/tasks/{id}")
 async def update_task(id: int, update: TaskUpdate):
-    return task_service.update_task(id, title=update.title, done=update.done)
+    rows = task_service.update_task(conn, id, title=update.title, done=update.done)
+    if rows == -1:
+        return JSONResponse(status_code=409, content={"error": "Title already exists"})
+    if rows:
+        return JSONResponse(status_code=200, content={"message": "Task updated"})
+    return JSONResponse(status_code=404, content={"error": "No task exist"})
 
 
 @router.delete("/tasks/{id}", status_code=204)
 async def delete_task(id: int):
-    task_service.delete_task(id)
+    rows = task_service.delete_task(conn, id)
+    if not rows:
+        return JSONResponse(status_code=404, content={"error": "No task exist"})
