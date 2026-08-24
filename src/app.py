@@ -13,12 +13,13 @@ def create_app() -> FastAPI:
 if __name__ == "__main__":
     app = create_app()
     conn = get_connection()
-    uvicorn.run(app, host="127.0.0.1", port=4000)
+ 
     try:
         init_db(conn)
         seeding(conn)
+        uvicorn.run(app, host="127.0.0.1", port=4000)
     finally:
         conn.close()
 
-
+   
 
