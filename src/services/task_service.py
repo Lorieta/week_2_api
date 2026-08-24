@@ -1,8 +1,9 @@
 from fastapi import HTTPException
 from typing import Optional
 
-
+from models import Task
 from services import db
+from sqlite3 import IntegrityError
 
 def get_all_tasks(conn) -> list[dict]:
     curr = conn.cursor()
@@ -21,16 +22,37 @@ def get_task(task_id: int,conn):
         raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
     return result
 
+#Search
+def search_tasks(conn, q: str):
+    curr = conn.cursor()
+    statement = "SELECT * FROM tasks WHERE title LIKE :search_term"
+    
+    wildcard_query = f"%{q}%"
+    
+    result = curr.execute(statement, {"search_term": wildcard_query}).fetchall()
+    
+   
+    return result
 
-def search_tasks(title: Optional[str] = None, done: Optional[bool] = None) -> list[dict]:
-    return task_repo.search(title=title, done=done)
 
-
-def create_task(title: str) -> dict:
-    stripped = title.strip()
-    if not stripped:
+def create_task(conn,title:str, done: int ):
+    if not title:
         raise HTTPException(status_code=400, detail="Title is needed")
-    return task_repo.create(stripped)
+    
+    try:
+        curr = conn.cursor()
+        statement   = "INSERT INTO tasks (title, done) VALUES (:title, :done)"
+   
+        curr.execute(statement, {"title": title, "done": done})
+        conn.commit()
+        task_id = curr.lastrowid
+    except IntegrityError:
+        conn.rollback()
+        raise HTTPException(
+            status_code=409, 
+            detail=f"A task with the title '{title}' already exists."
+        )
+    return {"id": task_id, "title": title, "done": done}
 
 
 def update_task(task_id: int, title: Optional[str] = None, done: Optional[bool] = None) -> dict:

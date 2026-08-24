@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
-from typing import Optional
-
-from models import TaskCreate, TaskUpdate
+from typing import Optional, List
+from sqlite3 import IntegrityError
+from models import TaskCreate, TaskUpdate,Task
 from services import task_service
 from services.db import get_connection
-
+from models import TaskCreate
 router = APIRouter()
 conn = get_connection()
 
@@ -39,16 +39,20 @@ async def get_task(id: int):
 
 @router.get("/tasks/")
 async def search_task(
-    title: Optional[str] = Query(None),
-    done: Optional[bool] = Query(None),
+  title  
 ):
-    return task_service.search_tasks(title=title, done=done)
+    return task_service.search_tasks(conn,title)
 
 
-@router.post("/tasks", status_code=201)
+@router.post("/tasks", response_model= Task, status_code=201)
 async def add_task(payload: TaskCreate):
-    task = task_service.create_task(payload.title)
-    return {"status": "Created", "task": task}
+    
+    task_data = task_service.create_task(
+        conn=conn, 
+        title=payload.title, 
+        done=payload.done
+    )
+    return task_data
 
 
 @router.put("/tasks/{id}")
