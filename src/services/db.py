@@ -1,19 +1,26 @@
-import sqlite3
-DB_NAME = "task.db"
+import psycopg
+import  os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATABASE_URL= os.getenv("DATABASE_URL")
+
 
 def get_connection():
-    return sqlite3.connect(DB_NAME)
+
+    return psycopg.connect(DATABASE_URL)
 
 def init_db(conn):
     cur = conn.cursor()
 
     cur.execute(
             """
-    CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL UNIQUE,
-        done INTEGER
-    );
+ CREATE TABLE IF NOT EXISTS tasks (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL UNIQUE,
+    done BOOLEAN DEFAULT FALSE
+);
             """
         )
 
@@ -38,11 +45,11 @@ def seeding(conn):
         """
         INSERT INTO tasks (title, done)
 SELECT title, done FROM (
-    SELECT 'Buy groceries' AS title, 0 AS done
-    UNION ALL SELECT 'Walk the dog', 0
-    UNION ALL SELECT 'Read a book', 0
+    SELECT 'Buy groceries' AS title, false AS done
+    UNION ALL SELECT 'Walk the dog', false 
+    UNION ALL SELECT 'Read a book', false 
 ) AS seed_data
-WHERE (SELECT COUNT(*) FROM tasks) = 0;
+WHERE NOT EXISTS (SELECT 1 FROM tasks);
 
         """
     )
