@@ -10,7 +10,7 @@ class Task(BaseModel):
 
 class TaskCreate(BaseModel):
     title: str
-    done: int
+    done: bool
 
 
 class TaskUpdate(BaseModel):

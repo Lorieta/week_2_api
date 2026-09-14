@@ -38,9 +38,10 @@ def create_task(conn, title: str, done: int):
         raise HTTPException(status_code=400, detail="Title is needed")
     try:
         curr = conn.cursor()
-        curr.execute("INSERT INTO tasks (title, done) VALUES (:title, :done)", {"title": title, "done": done})
+        curr.execute("INSERT INTO tasks (title, done) VALUES (%(title)s, %(done)s) RETURNING id, title, done", {"title": title, "done": done})
         conn.commit()
-        task_id = curr.lastrowid
+        row = curr.fetchone()
+        task_id = row[0]
     except IntegrityError:
         conn.rollback()
         raise HTTPException(status_code=409, detail=f"A task with the title '{title}' already exists.")
