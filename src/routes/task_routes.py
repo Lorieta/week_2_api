@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
-from typing import Optional, List
-from sqlite3 import IntegrityError
-from models import TaskCreate, TaskUpdate, Task
-from services import task_service
-from services.db import get_connection
+
+from src.models import TaskCreate, TaskUpdate, Task
+from src.services import task_service
+from src.services.db import get_connection
 
 router = APIRouter()
 

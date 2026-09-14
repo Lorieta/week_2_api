@@ -1,8 +1,6 @@
 from fastapi import HTTPException
 from typing import Optional
 
-from models import Task
-from services import db
 from sqlite3 import IntegrityError
 
 
@@ -18,7 +16,7 @@ def get_all_tasks(conn) -> list[dict]:
 def get_task(task_id: int, conn):
     try:
         curr = conn.cursor()
-        result = curr.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        result = curr.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
     except:
         raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
     if not result:
@@ -52,7 +50,7 @@ def create_task(conn, title: str, done: int):
 def update_task(conn, task_id: int, title: Optional[str] = None, done: Optional[bool] = None) -> int:
     try:
         curr = conn.cursor()
-        curr.execute("UPDATE tasks SET title = ?, done = ? WHERE id = ?", (title, done, task_id))
+        curr.execute("UPDATE tasks SET title = %s, done = %s WHERE id = %s", (title, done, task_id))
         conn.commit()
         return curr.rowcount
     except IntegrityError:
@@ -63,7 +61,7 @@ def update_task(conn, task_id: int, title: Optional[str] = None, done: Optional[
 def delete_task(conn, task_id: int) -> int:
     try:
         curr = conn.cursor()
-        curr.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        curr.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
         conn.commit()
         return curr.rowcount
     except:
