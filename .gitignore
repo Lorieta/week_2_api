@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 task.db
 task.db-journal
+.env
+
