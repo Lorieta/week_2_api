@@ -1,4 +1,4 @@
-# Task API — Week 2 Containers
+# Task API — A3 Containers
 
 A RESTful Task API built with FastAPI, PostgreSQL, and Docker. One command spins up the full stack — API server, database, schema creation, and seeded data.
 
